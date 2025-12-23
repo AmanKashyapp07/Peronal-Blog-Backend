@@ -1,6 +1,5 @@
 const express = require("express");
 const cors = require("cors");
-require("dotenv").config(); // This loads the .env file
 
 const routes = require("./routes");
 const errorMiddleware = require("./middleware/error.middleware");
@@ -23,10 +22,8 @@ app.use("/api", routes);
 // Global error handler (must be last)
 app.use(errorMiddleware);
 
-// Use PORT from env, fallback to 4000 if not found
-const PORT = process.env.PORT || 4000;
-pool.connect()
-  .then(() => console.log("DB connected"))
-  .catch(err => console.error(err));
+const PORT = process.env.PORT;
 
-app.listen(PORT, "0.0.0.0", () => {});
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Backend running on port ${PORT}`);
+});
