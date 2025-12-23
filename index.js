@@ -25,7 +25,7 @@ app.use(errorMiddleware);
 
 // Use PORT from env, fallback to 4000 if not found
 const PORT = process.env.PORT || 4000;
-
+app.listen(PORT, "0.0.0.0");
 app.listen(PORT, () => {
   console.log(`Backend running on http://localhost:${PORT}`);
 });
