@@ -25,7 +25,8 @@ app.use(errorMiddleware);
 
 // Use PORT from env, fallback to 4000 if not found
 const PORT = process.env.PORT || 4000;
+pool.connect()
+  .then(() => console.log("DB connected"))
+  .catch(err => console.error(err));
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Backend running on port ${PORT}`);
-});
+app.listen(PORT, "0.0.0.0", () => {});
