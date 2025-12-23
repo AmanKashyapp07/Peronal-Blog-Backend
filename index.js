@@ -17,12 +17,16 @@ const allowedOrigins = [
 
 app.use(
   cors({
-    origin: function (origin, callback) {
+    origin: (origin, callback) => {
+      // allow requests with no origin (like mobile apps, curl, Render health checks)
       if (!origin) return callback(null, true);
+
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-      return callback(new Error("Not allowed by CORS"));
+
+      // IMPORTANT: do NOT throw error
+      return callback(null, false);
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -30,8 +34,7 @@ app.use(
   })
 );
 
-// Handle preflight requests
-app.options("*", cors());
+
 
 /* =========================
    MIDDLEWARES
