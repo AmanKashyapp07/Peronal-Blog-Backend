@@ -2,7 +2,7 @@ const pool = require("../config/db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-const SECRET = "jwt_secret_key";
+const SECRET = process.env.JWT_SECRET;
 
 const signup = async (req, res, next) => {
   try {

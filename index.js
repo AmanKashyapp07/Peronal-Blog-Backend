@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+require("dotenv").config(); // This loads the .env file
 
 const routes = require("./routes");
 const errorMiddleware = require("./middleware/error.middleware");
@@ -12,17 +13,19 @@ app.use(express.json());
 // Enable CORS for frontend
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: "http://localhost:5173", // You can also move this to process.env.CLIENT_URL if you like
   })
 );
 
-// Mount routes (you will define routes later)
+// Mount routes
 app.use("/api", routes);
 
 // Global error handler (must be last)
 app.use(errorMiddleware);
 
-const PORT = 4000;
+// Use PORT from env, fallback to 4000 if not found
+const PORT = process.env.PORT || 4000;
+
 app.listen(PORT, () => {
   console.log(`Backend running on http://localhost:${PORT}`);
 });
