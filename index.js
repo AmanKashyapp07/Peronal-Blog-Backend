@@ -13,7 +13,9 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
-  "https://personal-blog-frontend-tau.vercel.app"
+  "https://personal-blog-frontend-tau.vercel.app", // optional, can keep
+  "https://amankashyap.site",
+  "https://www.amankashyap.site"
 ];
 
 app.use(
