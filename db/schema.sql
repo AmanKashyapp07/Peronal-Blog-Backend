@@ -52,3 +52,44 @@ CREATE TRIGGER trg_set_author_name
 BEFORE INSERT ON blogs
 FOR EACH ROW
 EXECUTE FUNCTION set_author_name_from_users();
+-- =========================
+-- COMMENTS TABLE
+-- =========================
+CREATE TABLE comments (
+    id SERIAL PRIMARY KEY,
+    blog_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+);
+
+ALTER TABLE comments
+ADD CONSTRAINT comments_blog_id_fkey
+FOREIGN KEY (blog_id)
+REFERENCES blogs(id)
+ON DELETE CASCADE;
+
+
+ALTER TABLE comments
+ADD CONSTRAINT comments_user_id_fkey
+FOREIGN KEY (user_id)
+REFERENCES users(id)
+ON DELETE CASCADE;
+
+CREATE OR REPLACE FUNCTION set_comment_username_from_users()
+RETURNS TRIGGER AS $$
+BEGIN
+    SELECT username
+    INTO NEW.username
+    FROM users
+    WHERE id = NEW.user_id;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER trg_set_comment_username
+BEFORE INSERT ON comments
+FOR EACH ROW
+EXECUTE FUNCTION set_comment_username_from_users();
