@@ -4,6 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const routes = require("./routes");
 const errorMiddleware = require("./middleware/error.middleware");
+const authMiddleware = require("./middleware/auth.middleware");
 
 const app = express();
 
@@ -49,7 +50,7 @@ app.use(express.json());
    ========================= */
 app.use("/api", routes);
 // DELETE comment route
-app.delete('/api/blogs/:blogId/comments/:commentId', authenticateToken, async (req, res) => {
+app.delete('/api/blogs/:blogId/comments/:commentId', authMiddleware, async (req, res) => {
     try {
         const { blogId, commentId } = req.params;
         const userId = req.user.id; // From your JWT token
