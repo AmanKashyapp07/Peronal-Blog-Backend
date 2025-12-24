@@ -48,7 +48,38 @@ app.use(express.json());
    ROUTES
    ========================= */
 app.use("/api", routes);
+// DELETE comment route
+app.delete('/api/blogs/:blogId/comments/:commentId', authenticateToken, async (req, res) => {
+    try {
+        const { blogId, commentId } = req.params;
+        const userId = req.user.id; // From your JWT token
 
+        // 1. Check if the Blog exists and belongs to the requesting user
+        const blogResult = await pool.query(
+            "SELECT * FROM blogs WHERE id = $1", 
+            [blogId]
+        );
+
+        if (blogResult.rows.length === 0) {
+            return res.status(404).json({ message: "Blog not found" });
+        }
+
+        const blog = blogResult.rows[0];
+
+        // 2. Security Check: Is the requester the AUTHOR of the blog?
+        if (blog.author_id !== userId) {
+            return res.status(403).json({ message: "Only the blog author can delete comments here." });
+        }
+
+        // 3. Delete the comment
+        await pool.query("DELETE FROM comments WHERE id = $1", [commentId]);
+
+        res.sendStatus(204); // Success, no content
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send("Server Error");
+    }
+});
 /* =========================
    ERROR HANDLER (LAST)
    ========================= */
