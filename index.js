@@ -1,5 +1,5 @@
 require("dotenv").config();
-
+const pool = require("/Users/amankashyap/Documents/blog_backend/config/db.js");
 const express = require("express");
 const cors = require("cors");
 const routes = require("./routes");
@@ -50,36 +50,61 @@ app.use(express.json());
    ========================= */
 app.use("/api", routes);
 // DELETE comment route
-app.delete('/api/blogs/:blogId/comments/:commentId', authMiddleware, async (req, res) => {
+// DELETE a comment
+app.delete(
+  "/api/blogs/:id/comments/:commentId",
+  authMiddleware,
+  async (req, res) => {
     try {
-        const { blogId, commentId } = req.params;
-        const userId = req.user.id; // From your JWT token
+      const { commentId } = req.params;
+      const userId = req.user.id;
 
-        // 1. Check if the Blog exists and belongs to the requesting user
-        const blogResult = await pool.query(
-            "SELECT * FROM blogs WHERE id = $1", 
-            [blogId]
-        );
+      const commentResult = await pool.query(
+        "SELECT id, blog_id, user_id FROM comments WHERE id = $1",
+        [commentId]
+      );
 
-        if (blogResult.rows.length === 0) {
-            return res.status(404).json({ message: "Blog not found" });
-        }
+      if (commentResult.rows.length === 0) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
 
-        const blog = blogResult.rows[0];
+      const comment = commentResult.rows[0];
 
-        // 2. Security Check: Is the requester the AUTHOR of the blog?
-        if (blog.author_id !== userId) {
-            return res.status(403).json({ message: "Only the blog author can delete comments here." });
-        }
+      const blogResult = await pool.query(
+        "SELECT author_id FROM blogs WHERE id = $1",
+        [comment.blog_id]
+      );
 
-        // 3. Delete the comment
-        await pool.query("DELETE FROM comments WHERE id = $1", [commentId]);
+      if (blogResult.rows.length === 0) {
+        return res.status(404).json({ message: "Blog not found" });
+      }
 
-        res.sendStatus(204); // Success, no content
+      const blog = blogResult.rows[0];
+
+      if (
+        Number(blog.author_id) !== Number(userId) &&
+        Number(comment.user_id) !== Number(userId)
+      ) {
+        return res
+          .status(403)
+          .json({ message: "You are not authorized to delete this comment" });
+      }
+
+      await pool.query("DELETE FROM comments WHERE id = $1", [commentId]);
+
+      return res.sendStatus(204);
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send("Server Error");
+      console.error("DELETE COMMENT ERROR:", err);
+      res.status(500).json({ message: "Internal server error" });
     }
+  }
+);
+
+app.get("/api/test-auth", authMiddleware, (req, res) => {
+  res.json({
+    ok: true,
+    user: req.user
+  });
 });
 /* =========================
    ERROR HANDLER (LAST)
