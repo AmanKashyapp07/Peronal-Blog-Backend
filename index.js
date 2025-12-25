@@ -1,5 +1,5 @@
 require("dotenv").config();
-const pool = require("/Users/amankashyap/Documents/blog_backend/config/db.js");
+const pool = require("./config/db");
 const express = require("express");
 const cors = require("cors");
 const routes = require("./routes");
