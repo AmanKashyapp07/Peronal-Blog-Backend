@@ -12,7 +12,7 @@ const signup = async (req, res, next) => {
 
     const result = await pool.query(
       "INSERT INTO users (username, password, role) VALUES ($1, $2, $3) RETURNING id, username, role",
-      [username, hashed, "user"] // default role
+      [username, hashed, "user"] 
     );
 
     const newUser = result.rows[0];
@@ -20,7 +20,7 @@ const signup = async (req, res, next) => {
     const token = jwt.sign(
       { id: newUser.id, username: newUser.username, role: newUser.role },
       SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "2h" }
     );
 
     res.status(201).json({
