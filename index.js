@@ -14,23 +14,22 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
-  "https://personal-blog-frontend-tau.vercel.app", // optional, can keep
   "https://amankashyap.site",
-  "https://www.amankashyap.site",
-  "https://personal-blog-frontend-git-main-amankashyapcloud-2075s-projects.vercel.app/login"
+  "https://www.amankashyap.site"
 ];
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // allow requests with no origin (like mobile apps, curl, Render health checks)
       if (!origin) return callback(null, true);
 
-      if (allowedOrigins.includes(origin)) {
+      if (
+        allowedOrigins.includes(origin) ||
+        origin.endsWith(".vercel.app")
+      ) {
         return callback(null, true);
       }
 
-      // IMPORTANT: do NOT throw error
       return callback(null, false);
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -120,4 +119,3 @@ const PORT = process.env.PORT || 4000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Backend running on port ${PORT}`);
 });
-
