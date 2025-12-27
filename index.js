@@ -16,7 +16,8 @@ const allowedOrigins = [
   "http://localhost:3000",
   "https://personal-blog-frontend-tau.vercel.app", // optional, can keep
   "https://amankashyap.site",
-  "https://www.amankashyap.site"
+  "https://www.amankashyap.site",
+  "https://personal-blog-frontend-git-main-amankashyapcloud-2075s-projects.vercel.app/login"
 ];
 
 app.use(
