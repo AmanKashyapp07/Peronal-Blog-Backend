@@ -93,3 +93,36 @@ CREATE TRIGGER trg_set_comment_username
 BEFORE INSERT ON comments
 FOR EACH ROW
 EXECUTE FUNCTION set_comment_username_from_users();
+
+-- public.blog_likes definition
+
+-- Drop table
+
+-- DROP TABLE public.blog_likes;
+
+CREATE TABLE public.blog_likes (
+	id serial4 NOT NULL,
+	blog_id int4 NOT NULL,
+	user_id int4 NOT NULL,
+	created_at timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+	CONSTRAINT blog_likes_pkey PRIMARY KEY (id),
+	CONSTRAINT blog_likes_unique UNIQUE (blog_id, user_id)
+);
+
+-- Table Triggers
+
+create trigger trg_increment_blog_like after
+insert
+    on
+    public.blog_likes for each row execute function increment_blog_like_count();
+create trigger trg_decrement_blog_like after
+delete
+    on
+    public.blog_likes for each row execute function decrement_blog_like_count();
+
+
+-- public.blog_likes foreign keys
+
+ALTER TABLE public.blog_likes ADD CONSTRAINT blog_likes_blog_id_fkey FOREIGN KEY (blog_id) REFERENCES public.blogs(id) ON DELETE CASCADE;
+ALTER TABLE public.blog_likes ADD CONSTRAINT blog_likes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+ALTER TABLE public.blogs ADD CONSTRAINT blogs_author_id_fkey FOREIGN KEY (author_id) REFERENCES public.users(id) ON DELETE CASCADE;
