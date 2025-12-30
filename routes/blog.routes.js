@@ -55,8 +55,7 @@ router.post("/:id/like", authMiddleware, async (req, res) => {
     // different middlewares attach it differently (req.user.id vs req.userId)
     const userId = req.userId || (req.user && req.user.id) || (req.user && req.user.userId);
 
-    // DEBUGGING LOG (Check your Render logs if this fails!)
-    console.log(`[LIKE ATTEMPT] Blog: ${blogId}, User: ${userId}`);
+
 
     if (!userId) {
       console.error("CRITICAL: User ID is missing from request object.");
@@ -71,13 +70,7 @@ router.post("/:id/like", authMiddleware, async (req, res) => {
       [blogId, userId]
     );
 
-    // 2. Increment count if inserted
-    if (insertResult.rowCount > 0) {
-      await pool.query(
-        "UPDATE blogs SET like_count = like_count + 1 WHERE id = $1",
-        [blogId]
-      );
-    }
+    
 
     // 3. Return updated count
     const { rows } = await pool.query(
@@ -113,13 +106,7 @@ router.delete("/:id/like", authMiddleware, async (req, res) => {
       [blogId, userId]
     );
 
-    // 2. Decrement count if deleted
-    if (deleteResult.rowCount > 0) {
-      await pool.query(
-        "UPDATE blogs SET like_count = like_count - 1 WHERE id = $1",
-        [blogId]
-      );
-    }
+   
 
     // 3. Return updated count
     const { rows } = await pool.query(
