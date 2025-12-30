@@ -27,7 +27,7 @@ router.get("/my", authMiddleware, getMyBlogs);
 router.get("/:id/like-status", authMiddleware, async (req, res) => {
   try {
     const blogId = req.params.id;
-    const userId = req.userId;
+    const userId = req.userId || (req.user && req.user.id) || (req.user && req.user.userId);
 
     const { rows } = await pool.query(
       `SELECT EXISTS (
@@ -44,11 +44,24 @@ router.get("/:id/like-status", authMiddleware, async (req, res) => {
   }
 });
 
-// Like a Blog
+// ==========================================
+// LIKE A BLOG (Fixed ID Extraction)
+// ==========================================
 router.post("/:id/like", authMiddleware, async (req, res) => {
   try {
     const blogId = req.params.id;
-    const userId = req.userId;
+
+    // --- FIX: CHECK ALL POSSIBLE LOCATIONS FOR USER ID ---
+    // different middlewares attach it differently (req.user.id vs req.userId)
+    const userId = req.userId || (req.user && req.user.id) || (req.user && req.user.userId);
+
+    // DEBUGGING LOG (Check your Render logs if this fails!)
+    console.log(`[LIKE ATTEMPT] Blog: ${blogId}, User: ${userId}`);
+
+    if (!userId) {
+      console.error("CRITICAL: User ID is missing from request object.");
+      return res.status(500).json({ message: "Server Error: User ID not found" });
+    }
 
     // 1. Try to insert
     const insertResult = await pool.query(
@@ -74,16 +87,24 @@ router.post("/:id/like", authMiddleware, async (req, res) => {
 
     res.json({ liked: true, likeCount: rows[0].like_count });
   } catch (err) {
-    console.error(err);
+    console.error("LIKE ERROR:", err);
     res.status(500).json({ message: "Failed to like blog" });
   }
 });
 
-// Unlike a Blog
+// ==========================================
+// UNLIKE A BLOG (Fixed ID Extraction)
+// ==========================================
 router.delete("/:id/like", authMiddleware, async (req, res) => {
   try {
     const blogId = req.params.id;
-    const userId = req.userId;
+    
+    // --- FIX: SAME CHECK HERE ---
+    const userId = req.userId || (req.user && req.user.id) || (req.user && req.user.userId);
+
+    if (!userId) {
+      return res.status(500).json({ message: "Server Error: User ID not found" });
+    }
 
     // 1. Try to delete
     const deleteResult = await pool.query(
