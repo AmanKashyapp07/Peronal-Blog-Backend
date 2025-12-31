@@ -129,40 +129,39 @@ const getAllCommentsByBlog = async (req, res, next) => {
 
 const addComment = async (req, res, next) => {
   try {
-    // 1. Get blog_id from the URL parameter (:id)
-    const { id } = req.params; 
-    
-    // 2. Get content from the request body
+    const { id } = req.params;
     const { content } = req.body;
-    
-    // 3. Get user_id from the authMiddleware (assumed attached to req.user)
     const userId = req.user.id;
 
-    // 4. Validate input
     if (!content) {
       return res.status(400).json({ message: "Comment content is required" });
     }
 
-    // 5. Insert into database
-    const newComment = await pool.query(
-      `INSERT INTO comments (blog_id, user_id, content) 
-       VALUES ($1, $2, $3) 
-       RETURNING id, content, created_at, (SELECT username FROM users WHERE id = $2) as username`,
+    const commentResult = await pool.query(
+      `INSERT INTO comments (blog_id, user_id, content)
+       VALUES ($1, $2, $3)
+       RETURNING id, content, created_at,
+       (SELECT username FROM users WHERE id = $2) AS username`,
       [id, userId, content]
     );
 
-    // 6. Return the newly created comment (with username included for immediate display)
-    res.status(201).json(newComment.rows[0]);
+    await pool.query(
+      `UPDATE blogs
+       SET comments_count = comments_count + 1
+       WHERE id = $1`,
+      [id]
+    );
 
+    res.status(201).json(commentResult.rows[0]);
   } catch (err) {
     console.error(err.message);
-    next(err); // Pass to your error handling middleware
+    next(err);
   }
 };
 const deleteComment = async (req, res) => {
   try {
     const { commentId } = req.params;
-    const userId = req.userId || req.user?.id || req.user?.userId;
+    const userId = req.user?.id || req.userId;
 
     const commentResult = await pool.query(
       "SELECT id, blog_id, user_id FROM comments WHERE id = $1",
@@ -190,12 +189,19 @@ const deleteComment = async (req, res) => {
       Number(blog.author_id) !== Number(userId) &&
       Number(comment.user_id) !== Number(userId)
     ) {
-      return res.status(403).json({ message: "You are not authorized to delete this comment" });
+      return res.status(403).json({ message: "Not authorized" });
     }
 
     await pool.query("DELETE FROM comments WHERE id = $1", [commentId]);
 
-    return res.sendStatus(204);
+    await pool.query(
+      `UPDATE blogs
+       SET comments_count = GREATEST(comments_count - 1, 0)
+       WHERE id = $1`,
+      [comment.blog_id]
+    );
+
+    res.sendStatus(204);
   } catch (err) {
     console.error("DELETE COMMENT ERROR:", err);
     res.status(500).json({ message: "Internal server error" });
