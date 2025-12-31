@@ -159,7 +159,48 @@ const addComment = async (req, res, next) => {
     next(err); // Pass to your error handling middleware
   }
 };
+const deleteComment = async (req, res) => {
+  try {
+    const { commentId } = req.params;
+    const userId = req.userId || req.user?.id || req.user?.userId;
 
+    const commentResult = await pool.query(
+      "SELECT id, blog_id, user_id FROM comments WHERE id = $1",
+      [commentId]
+    );
+
+    if (commentResult.rows.length === 0) {
+      return res.status(404).json({ message: "Comment not found" });
+    }
+
+    const comment = commentResult.rows[0];
+
+    const blogResult = await pool.query(
+      "SELECT author_id FROM blogs WHERE id = $1",
+      [comment.blog_id]
+    );
+
+    if (blogResult.rows.length === 0) {
+      return res.status(404).json({ message: "Blog not found" });
+    }
+
+    const blog = blogResult.rows[0];
+
+    if (
+      Number(blog.author_id) !== Number(userId) &&
+      Number(comment.user_id) !== Number(userId)
+    ) {
+      return res.status(403).json({ message: "You are not authorized to delete this comment" });
+    }
+
+    await pool.query("DELETE FROM comments WHERE id = $1", [commentId]);
+
+    return res.sendStatus(204);
+  } catch (err) {
+    console.error("DELETE COMMENT ERROR:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 module.exports = {
   getAllBlogs,
@@ -169,5 +210,6 @@ module.exports = {
   deleteBlog,
   getMyBlogs,
   getAllCommentsByBlog, 
-  addComment
+  addComment,
+  deleteComment
 };
